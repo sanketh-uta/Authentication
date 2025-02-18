@@ -2,9 +2,8 @@ package com.sanbro.Authentication.Controller;
 
 import com.sanbro.Authentication.DTO.APIResponseDTO;
 import com.sanbro.Authentication.DTO.UserResponseDTO;
-import com.sanbro.Authentication.Entity.User;
+import com.sanbro.Authentication.Service.EmailVerificationService;
 import com.sanbro.Authentication.Service.SignUpService;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -19,11 +18,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class SignUpSignInController {
     @Autowired
     private SignUpService SignupService;
+    @Autowired
+    private EmailVerificationService emailVerificationService;
 
     @PostMapping("/signup")
     public ResponseEntity<?> signUp(@RequestBody UserResponseDTO userResponseDTO){
-        APIResponseDTO apiResponseDTO = SignupService.signUp(userResponseDTO);
-        return new ResponseEntity<> (apiResponseDTO.getMessage(), HttpStatusCode.valueOf(apiResponseDTO.getStatusCode()));
+        if(emailVerificationService.verifyEmail(userResponseDTO.getEmail())){
+            APIResponseDTO apiResponseDTO = SignupService.signUp(userResponseDTO);
+            return new ResponseEntity<> (apiResponseDTO.getMessage(), HttpStatusCode.valueOf(apiResponseDTO.getStatusCode()));
+        }
+        return new ResponseEntity<>("Invalid email address",HttpStatus.BAD_REQUEST);
+//        APIResponseDTO apiResponseDTO = SignupService.signUp(userResponseDTO);
+//        return new ResponseEntity<> (apiResponseDTO.getMessage(), HttpStatusCode.valueOf(apiResponseDTO.getStatusCode()));
     }
 
     @PostMapping("/signin")
